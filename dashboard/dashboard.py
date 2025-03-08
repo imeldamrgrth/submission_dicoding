@@ -7,20 +7,31 @@ import seaborn as sns
 st.title("📊 E-Commerce Data Analysis Dashboard")
 st.write("## 🔍 Analisis Data Pesanan")
 
-# Path file CSV (Pastikan path ini sesuai dengan lokasi file di komputer Anda)
-data_path = "C:/Users/IMELDA MARGARET/Documents/Data/DataAnalysisProject/dashboard/dataset/"
-
-# Define the datasets dictionary
-datasets = {
-    "Geolocation Dataset": "geolocation_dataset.csv",
-    "Orders Dataset": "orders_dataset.csv",
-    "Order Items Dataset": "order_items_dataset.csv",
-    "Order Payments Dataset": "order_payments_dataset.csv",
-    "Order Reviews Dataset": "order_reviews_dataset.csv",
-    "Products Dataset": "products_dataset.csv",
-    "Product Category Name Translation Dataset": "product_category_name_translation.csv",
-    "Sellers Dataset": "sellers_dataset.csv"
+# Dictionary dengan URL dataset dari GitHub
+data_urls = {
+    "Geolocation Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/geolocation_dataset.csv",
+    "Orders Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/orders_dataset.csv",
+    "Order Items Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_items_dataset.csv",
+    "Order Payments Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_payments_dataset.csv",
+    "Order Reviews Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_reviews_dataset.csv",
+    "Products Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/products_dataset.csv",
+    "Product Category Name Translation Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/product_category_name_translation.csv",
+    "Sellers Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/sellers_dataset.csv"
 }
+
+# Fungsi untuk membaca dataset berdasarkan nama
+def load_dataset(dataset_name):
+    if dataset_name in data_urls:
+        return pd.read_csv(data_urls[dataset_name])
+    else:
+        print(f"Dataset {dataset_name} tidak ditemukan.")
+        return None
+
+# Contoh: Baca dataset Orders
+df_orders = load_dataset("Orders Dataset")
+
+# Cek apakah data terbaca dengan benar
+print(df_orders.head())
 
 # Load dataset and clean the data
 def load_and_clean_data(file_path):
