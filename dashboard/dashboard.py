@@ -3,79 +3,42 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Set title
+# Konfigurasi halaman
+st.set_page_config(page_title="E-Commerce Data Analysis", layout="wide")
+
+# Set judul
 st.title("📊 E-Commerce Data Analysis Dashboard")
-st.write("## 🔍 Analisis Data Pesanan")
+st.write("## 🔍 Analisis Data E-Commerce")
 
-# Dictionary dengan URL dataset dari GitHub
-data_urls = {
-    "Geolocation Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/geolocation_dataset.csv",
-    "Orders Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/orders_dataset.csv",
-    "Order Items Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_items_dataset.csv",
-    "Order Payments Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_payments_dataset.csv",
-    "Order Reviews Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/order_reviews_dataset.csv",
-    "Products Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/products_dataset.csv",
-    "Product Category Name Translation Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/product_category_name_translation.csv",
-    "Sellers Dataset": "https://raw.githubusercontent.com/imeldamgrrth/submission_dicoding/master/dataset/sellers_dataset.csv"
-}
-
-# Fungsi untuk membaca dataset berdasarkan nama
-def load_dataset(dataset_name):
-    if dataset_name in data_urls:
-        return pd.read_csv(data_urls[dataset_name])
-    else:
-        print(f"Dataset {dataset_name} tidak ditemukan.")
-        return None
-
-# Contoh: Baca dataset Orders
-df_orders = load_dataset("Orders Dataset")
-
-# Cek apakah data terbaca dengan benar
-print(df_orders.head())
-
-# Load dataset and clean the data
-def load_and_clean_data(file_path):
-    # Load the dataset
-    df = pd.read_csv(file_path)
+# Load dataset
+@st.cache_data
+def load_data():
+    geolocation = pd.read_csv("geolocation_dataset.csv")
+    orders = pd.read_csv("orders_dataset.csv")
+    order_items = pd.read_csv("order_items_dataset.csv")
+    order_payments = pd.read_csv("order_payments_dataset.csv")
+    order_reviews = pd.read_csv("order_reviews_dataset.csv")
+    products = pd.read_csv("products_dataset.csv")
+    product_translation = pd.read_csv("product_category_name_translation.csv")
+    sellers = pd.read_csv("sellers_dataset.csv")
     
-    # Remove missing values (drop rows with any missing values)
-    df_cleaned = df.dropna()
-    
-    # Remove duplicate rows
-    df_cleaned = df_cleaned.drop_duplicates()
-    
-    return df_cleaned
+    return geolocation, orders, order_items, order_payments, order_reviews, products, product_translation, sellers
 
-# Load and clean the datasets
-try:
-    geolocation = load_and_clean_data(data_path + datasets["Geolocation Dataset"])
-    orders = load_and_clean_data(data_path + datasets["Orders Dataset"])
-    order_items = load_and_clean_data(data_path + datasets["Order Items Dataset"])
-    order_payments = load_and_clean_data(data_path + datasets["Order Payments Dataset"])
-    order_reviews = load_and_clean_data(data_path + datasets["Order Reviews Dataset"])
-    products = load_and_clean_data(data_path + datasets["Products Dataset"])
-    product_translation = load_and_clean_data(data_path + datasets["Product Category Name Translation Dataset"])
-    sellers = load_and_clean_data(data_path + datasets["Sellers Dataset"])
-    
-    st.success("✅ Semua dataset berhasil dimuat dan dibersihkan!")
-except FileNotFoundError as e:
-    st.error(f"❌ File tidak ditemukan: {e}")
-    st.stop()
-except Exception as e:
-    st.error(f"⚠️ Terjadi kesalahan: {e}")
-    st.stop()
+# Load semua dataset
+geolocation, orders, order_items, order_payments, order_reviews, products, product_translation, sellers = load_data()
 
-# Display the first few rows of each cleaned dataset
-st.write("### 🗂️ Data Awal yang Telah Dibersihkan")
-for title, file in datasets.items():
-    df_cleaned = load_and_clean_data(data_path + file)
-    st.write(f"#### {title}")
-    st.dataframe(df_cleaned.head())
+# Menampilkan daftar dataset yang berhasil dimuat
+st.success("✅ Semua dataset berhasil dimuat!")
+
+# ======================== ANALISIS DATA ========================
 
 # 1️⃣ Distribusi Metode Pembayaran
 st.write("## 💳 Distribusi Metode Pembayaran")
-payment_counts = order_payments['payment_type'].value_counts()
-st.bar_chart(payment_counts)
+if 'payment_type' in order_payments.columns:
+    payment_counts = order_payments['payment_type'].value_counts()
+    st.bar_chart(payment_counts)
+else:
+    st.warning("Kolom 'payment_type' tidak ditemukan dalam dataset.")
 
 # 2️⃣ Distribusi Harga Produk
 st.write("## 💰 Distribusi Harga Produk")
@@ -92,8 +55,9 @@ else:
 # 3️⃣ Dampak Harga terhadap Jumlah Pesanan
 st.write("## 📈 Dampak Harga terhadap Jumlah Pesanan")
 if 'price' in order_items.columns and 'order_id' in order_items.columns:
+    order_count = order_items.groupby('price')['order_id'].nunique()
     fig, ax = plt.subplots()
-    sns.scatterplot(x=order_items['price'], y=order_items['order_id'].map(order_items['order_id'].value_counts()), alpha=0.5, color='red', ax=ax)
+    sns.scatterplot(x=order_count.index, y=order_count.values, alpha=0.5, color='red', ax=ax)
     ax.set_xlabel("Harga Produk")
     ax.set_ylabel("Jumlah Pesanan")
     ax.set_title("Dampak Harga terhadap Jumlah Pesanan")
@@ -113,37 +77,52 @@ if 'review_creation_date' in order_reviews.columns and 'review_answer_timestamp'
     ax.set_ylabel("Frekuensi")
     ax.set_title("Distribusi Waktu Respons Ulasan Pelanggan")
     st.pyplot(fig)
+else:
+    st.warning("Kolom 'review_creation_date' atau 'review_answer_timestamp' tidak ditemukan dalam dataset.")
 
 # 5️⃣ Hubungan Kategori Produk dengan Rating Ulasan
 st.write("## ⭐ Hubungan Kategori Produk dengan Rating Ulasan")
-if 'review_score' in order_reviews.columns and 'product_id' in order_items.columns:
-    merged_data = order_items.merge(order_reviews, on='order_id')
-    category_ratings = merged_data.groupby('product_id')['review_score'].mean()
+if 'review_score' in order_reviews.columns and 'product_id' in order_items.columns and 'product_id' in products.columns:
+    merged_data = order_items.merge(products, on="product_id", how="left")
+    merged_data = merged_data.merge(order_reviews, on="order_id", how="left")
+    category_ratings = merged_data.groupby('product_category_name')['review_score'].mean()
+    
     fig, ax = plt.subplots()
-    sns.barplot(x=category_ratings.index[:10], y=category_ratings.values[:10], palette="coolwarm", ax=ax, hue=None)
+    sns.barplot(x=category_ratings.index[:10], y=category_ratings.values[:10], palette="coolwarm", ax=ax)
     ax.set_xlabel("Kategori Produk")
     ax.set_ylabel("Rata-rata Rating")
     ax.set_title("Hubungan Kategori Produk dengan Rating Ulasan")
     plt.xticks(rotation=90)
     st.pyplot(fig)
+else:
+    st.warning("Kolom 'review_score' atau 'product_category_name' tidak ditemukan dalam dataset.")
 
 # 6️⃣ Distribusi Jumlah Produk per Penjual
-st.write("## 📦 Distribusi Jumlah Produk per Penjual")
-seller_product_count = order_items.groupby('seller_id')['product_id'].count()
-fig, ax = plt.subplots()
-sns.histplot(seller_product_count, bins=50, kde=True, color="purple", ax=ax)
-ax.set_xlabel("Jumlah Produk per Penjual")
-ax.set_ylabel("Frekuensi")
-ax.set_title("Distribusi Jumlah Produk per Penjual")
-st.pyplot(fig)
-
-# 7️⃣ Jumlah Produk dalam Pesanan
-st.write("## 📊 Jumlah Produk dalam Pesanan")
-if 'freight_value' in order_items.columns:
+st.write("## 🛍️ Distribusi Jumlah Produk per Penjual")
+if 'seller_id' in order_items.columns:
+    seller_counts = order_items['seller_id'].value_counts()
     fig, ax = plt.subplots()
-    sns.scatterplot(x=order_items['order_item_id'], y=order_items['freight_value'], alpha=0.5, color="dodgerblue", ax=ax)
+    sns.histplot(seller_counts, bins=30, kde=True, color="purple", ax=ax)
+    ax.set_xlabel("Jumlah Produk per Penjual")
+    ax.set_ylabel("Frekuensi")
+    ax.set_title("Distribusi Jumlah Produk per Penjual")
+    st.pyplot(fig)
+else:
+    st.warning("Kolom 'seller_id' tidak ditemukan dalam dataset.")
+
+# 7️⃣ Hubungan Jumlah Produk dalam Pesanan dan Biaya Pengiriman
+st.write("## 📦 Hubungan Jumlah Produk dalam Pesanan dan Biaya Pengiriman")
+if 'freight_value' in order_items.columns and 'order_id' in order_items.columns:
+    order_shipping = order_items.groupby("order_id").agg(
+        total_items=("order_item_id", "count"),
+        total_freight=("freight_value", "sum")
+    ).reset_index()
+    
+    fig, ax = plt.subplots(figsize=(8, 5))
+    sns.scatterplot(x=order_shipping['total_items'], y=order_shipping['total_freight'], alpha=0.5, color="orange", ax=ax)
     ax.set_xlabel("Jumlah Produk dalam Pesanan")
-    ax.set_ylabel("Biaya Pengiriman")
+    ax.set_ylabel("Total Biaya Pengiriman")
     ax.set_title("Hubungan Jumlah Produk dalam Pesanan dan Biaya Pengiriman")
     st.pyplot(fig)
-
+else:
+    st.warning("Kolom 'freight_value' atau 'order_id' tidak ditemukan dalam dataset.")
