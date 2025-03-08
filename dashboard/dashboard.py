@@ -8,7 +8,7 @@ st.title("📊 E-Commerce Data Analysis Dashboard")
 st.write("## 🔍 Analisis Data Pesanan")
 
 # Path file CSV (Pastikan path ini sesuai dengan lokasi file di komputer Anda)
-data_path = r"C:\Users\IMELDA MARGARET\Documents\Data\DataAnalysisProject\dashboard\main_data\\"
+data_path = "C:/Users/IMELDA MARGARET/Documents/Data/DataAnalysisProject/dashboard/dataset/"
 
 # Define the datasets dictionary
 datasets = {
@@ -109,7 +109,7 @@ if 'review_score' in order_reviews.columns and 'product_id' in order_items.colum
     merged_data = order_items.merge(order_reviews, on='order_id')
     category_ratings = merged_data.groupby('product_id')['review_score'].mean()
     fig, ax = plt.subplots()
-    sns.barplot(x=category_ratings.index[:10], y=category_ratings.values[:10], palette="coolwarm", ax=ax)
+    sns.barplot(x=category_ratings.index[:10], y=category_ratings.values[:10], palette="coolwarm", ax=ax, hue=None)
     ax.set_xlabel("Kategori Produk")
     ax.set_ylabel("Rata-rata Rating")
     ax.set_title("Hubungan Kategori Produk dengan Rating Ulasan")
