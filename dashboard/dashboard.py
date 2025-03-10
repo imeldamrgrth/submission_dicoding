@@ -2,9 +2,23 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
+from PIL import Image
+import os
 
 # Konfigurasi halaman
 st.set_page_config(page_title="E-Commerce Data Analysis", layout="wide")
+
+# Sidebar dengan logo dan filter tanggal
+with st.sidebar:
+    # Tampilkan logo jika ada
+    logo_path = "logo.png"
+    if os.path.exists(logo_path):
+        image = Image.open(logo_path)
+        st.image(image, use_container_width=True)
+    
+    # Filter tanggal
+    st.write("### Pilih Rentang Tanggal")
+    date_range = st.date_input("Rentang Tanggal", [])
 
 # Set judul
 st.title("📊 E-Commerce Data Analysis Dashboard")
